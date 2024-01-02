@@ -1,0 +1,11 @@
+[Unit]
+Description=Bjorn Unicorn HAT service
+After=multi-user.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/home/bjorn/bjorn-rgb/bjorn
+
+[Install]
+WantedBy=multi-user.target
