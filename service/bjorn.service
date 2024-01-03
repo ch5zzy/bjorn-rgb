@@ -5,6 +5,8 @@ After=multi-user.target
 [Service]
 Type=simple
 Restart=always
+User=bjorn
+WorkingDirectory=/home/bjorn/bjorn-rgb
 ExecStart=/home/bjorn/bjorn-rgb/bjorn
 
 [Install]
