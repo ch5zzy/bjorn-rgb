@@ -9,9 +9,8 @@ def resize(img_path: str, size=(16, 16)) -> str:
     # Resize each image individually
     thumbnails = []
     for frame in frames:
-        thumbnail = frame.convert("RGBA")
-        thumbnail.thumbnail(size, Image.NEAREST)
-        thumbnails.append(thumbnail)
+        frame.thumbnail(size, Image.NEAREST)
+        thumbnails.append(frame)
 
     # Save the image to a buffer
     buffer = BytesIO()

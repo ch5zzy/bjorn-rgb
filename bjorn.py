@@ -20,11 +20,15 @@ else:
     import unicornhathd as unicorn
 
 unicorn.rotation(0)
-width, height = unicorn.get_shape()
+display_width, display_height = unicorn.get_shape()
+
+img = None
+img_url = None
 
 
 def fetch_config():
     global img
+    global img_url
     global frames
 
     config = get(f"{jsonblob_api_url}{jsonblob_id}").json()
@@ -33,16 +37,24 @@ def fetch_config():
     unicorn.rotation(0)
     unicorn.brightness(config["brightness"])
 
-    # Update the displayed image
-    img = Image.open(BytesIO(get(config["image_url"]).content), formats=["GIF"])
-    frames = thumbnails(ImageSequence.Iterator(img))
+    # Update the displayed image if it changed
+    if config["image_url"] != img_url:
+        img_url = config["image_url"]
+
+        # Only update the image if it is valid
+        response = get(img_url)
+        if response.status_code == 200:
+            img = Image.open(BytesIO(response.content), formats=["GIF"])
+            img.save("cache.gif", save_all=True)
+        elif img == None:
+            img = Image.open("cache.gif")
+        frames = thumbnails(ImageSequence.Iterator(img))
 
 
 def thumbnails(frames):
     thumbnails = []
     for frame in frames:
         thumbnail = frame.convert("RGBA")
-        thumbnail.thumbnail((width, height), Image.NEAREST)
         thumbnails.append(thumbnail)
     return thumbnails
 
@@ -62,13 +74,13 @@ try:
 
         # Draw the image on the display
         for frame in frames:
-            w, h = frame.size
-            for x in range(width):
-                for y in range(height):
-                    if x >= w or y >= h:
+            frame_width, frame_height = frame.size
+            for x in range(display_width):
+                for y in range(display_height):
+                    if x >= frame_width or y >= frame_height:
                         continue
 
-                    pixel = frame.getpixel((w - x - 1, y))
+                    pixel = frame.getpixel((frame_width - x - 1, y))
                     r, g, b, a = pixel
                     unicorn.set_pixel(x, y, r, g, b)
 
