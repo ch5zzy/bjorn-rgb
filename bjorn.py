@@ -3,7 +3,7 @@ import argparse
 from PIL import Image, ImageSequence
 from requests import get
 from io import BytesIO
-from env import config_update_time, jsonblob_api_url, jsonblob_id
+from env import config_update_time, jsonblob_config_url
 from threading import Thread
 from sys import argv
 
@@ -22,16 +22,18 @@ else:
 unicorn.rotation(0)
 display_width, display_height = unicorn.get_shape()
 
-img = None
-img_url = None
-
 
 def fetch_config():
     global img
     global img_url
     global frames
 
-    config = get(f"{jsonblob_api_url}{jsonblob_id}").json()
+    response = get(jsonblob_config_url)
+    if response.status_code != 200:
+        print("Unable to fetch config.")
+        return
+
+    config = response.json()
 
     # Set the rotation and brightness
     unicorn.rotation(0)
@@ -39,15 +41,15 @@ def fetch_config():
 
     # Update the displayed image if it changed
     if config["image_url"] != img_url:
-        img_url = config["image_url"]
-
         # Only update the image if it is valid
-        response = get(img_url)
-        if response.status_code == 200:
-            img = Image.open(BytesIO(response.content), formats=["GIF"])
-            img.save("cache.gif", save_all=True)
-        elif img == None:
-            img = Image.open("cache.gif")
+        response = get(config["image_url"])
+        if response.status_code != 200:
+            print("Unable to fetch image.")
+            return
+
+        img_url = config["image_url"]
+        img = Image.open(BytesIO(response.content), formats=["GIF"])
+        img.save("cache.gif", save_all=True)
         frames = thumbnails(ImageSequence.Iterator(img))
 
 
@@ -58,6 +60,11 @@ def thumbnails(frames):
         thumbnails.append(thumbnail)
     return thumbnails
 
+
+# Load in the cached image
+img = Image.open("cache.gif")
+img_url = None
+frames = thumbnails(ImageSequence.Iterator(img))
 
 # Fetch the config on start
 fetch_config()
