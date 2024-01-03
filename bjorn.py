@@ -1,12 +1,23 @@
 import time
-from sys import argv
+import argparse
 from PIL import Image, ImageSequence
 from requests import get
 from io import BytesIO
 from env import config_update_time, jsonblob_api_url, jsonblob_id
 from threading import Thread
+from sys import argv
 
-from unicorn_hat_sim import unicornhathd as unicorn
+# Check whether the simulator should be used
+parser = argparse.ArgumentParser()
+parser.prog = "bjorn"
+parser.add_argument("-s", "--sim", action="store_true", default=False)
+
+args = parser.parse_args(argv[1:])
+
+if args.sim:
+    from unicorn_hat_sim import unicornhathd as unicorn
+else:
+    import unicornhathd as unicorn
 
 unicorn.rotation(0)
 width, height = unicorn.get_shape()
