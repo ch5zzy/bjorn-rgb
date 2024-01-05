@@ -23,7 +23,7 @@ unicorn.rotation(0)
 display_width, display_height = unicorn.get_shape()
 
 
-def fetch_config():
+def fetch_config() -> bool:
     global img
     global img_url
     global frames
@@ -52,6 +52,9 @@ def fetch_config():
         img.save("cache.gif", save_all=True)
         frames = thumbnails(ImageSequence.Iterator(img))
 
+        return True
+    return False
+
 
 def thumbnails(frames):
     thumbnails = []
@@ -69,18 +72,31 @@ frames = thumbnails(ImageSequence.Iterator(img))
 # Fetch the config on start
 fetch_config()
 
-last_update = time.time()
-try:
-    while True:
-        # Fetch the most recent config on update
-        now = time.time()
-        if now - last_update >= config_update_time:
-            last_update = now
-            t = Thread(target=fetch_config)
-            t.start()
+config_did_update = False
 
+
+def config_worker():
+    global config_did_update
+
+    while True:
+        config_did_update = fetch_config()
+        time.sleep(config_update_time)
+
+
+try:
+    # Spawn a separate thread for fetching the config
+    t = Thread(target=config_worker)
+    t.daemon = True
+    t.start()
+
+    while True:
         # Draw the image on the display
         for frame in frames:
+            # Break out of this loop if the config was updated
+            if config_did_update:
+                config_did_update = False
+                break
+
             frame_width, frame_height = frame.size
             for x in range(display_width):
                 for y in range(display_height):
