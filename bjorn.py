@@ -20,6 +20,7 @@ else:
     import unicornhathd as unicorn
 
 unicorn.rotation(-90)
+unicorn.brightness(0.6)
 display_width, display_height = unicorn.get_shape()
 
 
