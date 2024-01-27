@@ -29,8 +29,9 @@ def fetch_config() -> bool:
     global frames
 
     # Display a Wi-Fi symbol if the device is not connected to the internet
-    response = get("https://mozilla.org")
-    if response.status_code != 200:
+    try:
+        get("https://mozilla.org")
+    except:
         print("Waiting for internet connection.")
         img = Image.open("nowifi.gif")
         frames = thumbnails(ImageSequence.Iterator(img))
