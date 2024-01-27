@@ -28,6 +28,14 @@ def fetch_config() -> bool:
     global img_url
     global frames
 
+    # Display a Wi-Fi symbol if the device is not connected to the internet
+    response = get("https://mozilla.org")
+    if response.status_code != 200:
+        print("Waiting for internet connection.")
+        img = Image.open("nowifi.gif")
+        frames = thumbnails(ImageSequence.Iterator(img))
+        return
+
     response = get(jsonblob_config_url)
     if response.status_code != 200:
         print("Unable to fetch config.")
