@@ -19,7 +19,7 @@ if args.sim:
 else:
     import unicornhathd as unicorn
 
-unicorn.rotation(0)
+unicorn.rotation(-90)
 display_width, display_height = unicorn.get_shape()
 
 
@@ -36,7 +36,7 @@ def fetch_config() -> bool:
     config = response.json()
 
     # Set the rotation and brightness
-    unicorn.rotation(0)
+    unicorn.rotation(config["rotation"])
     unicorn.brightness(config["brightness"])
 
     # Update the displayed image if it changed
