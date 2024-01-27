@@ -108,7 +108,7 @@ try:
                     unicorn.set_pixel(x, y, r, g, b)
 
             unicorn.show()
-            time.sleep(frame.info["duration"] * 0.001)
+            time.sleep(frame.info["duration"] * 0.001 / 1.5)
 
 except KeyboardInterrupt:
     unicorn.off()
