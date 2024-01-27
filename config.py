@@ -3,12 +3,13 @@ import argparse
 from sys import argv, exit
 from os import path
 from PIL import Image
+from env import default_brightness, default_rotation
 
 parser = argparse.ArgumentParser()
 parser.prog = "config"
 parser.add_argument("image_path")
-parser.add_argument("-b", "--brightness", default=0.6, type=float)
-parser.add_argument("-r", "--rotation", default=-90, type=int)
+parser.add_argument("-b", "--brightness", default=default_brightness, type=float)
+parser.add_argument("-r", "--rotation", default=default_rotation, type=int)
 
 args = parser.parse_args(argv[1:])
 

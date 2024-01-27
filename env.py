@@ -1,6 +1,9 @@
 from dotenv import load_dotenv
 from os import environ
 
+default_rotation = -90
+default_brightness = 0.4
+
 jsonblob_api_url = "https://jsonblob.com/api/jsonBlob/"
 imgbb_upload_url = "https://api.imgbb.com/1/upload"
 

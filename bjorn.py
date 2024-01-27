@@ -3,7 +3,7 @@ import argparse
 from PIL import Image, ImageSequence
 from requests import get
 from io import BytesIO
-from env import config_update_time, jsonblob_config_url
+from env import config_update_time, jsonblob_config_url, default_rotation, default_brightness
 from threading import Thread
 from sys import argv
 
@@ -19,8 +19,8 @@ if args.sim:
 else:
     import unicornhathd as unicorn
 
-unicorn.rotation(-90)
-unicorn.brightness(0.6)
+unicorn.rotation(default_rotation)
+unicorn.brightness(default_brightness)
 display_width, display_height = unicorn.get_shape()
 
 
