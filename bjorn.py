@@ -1,9 +1,15 @@
 import time
 import argparse
+import atexit
 from PIL import Image, ImageSequence
 from requests import get
 from io import BytesIO
-from env import config_update_time, jsonblob_config_url, default_rotation, default_brightness
+from env import (
+    config_update_time,
+    jsonblob_config_url,
+    default_rotation,
+    default_brightness,
+)
 from threading import Thread
 from sys import argv
 
@@ -93,32 +99,31 @@ def config_worker():
         time.sleep(config_update_time)
 
 
-try:
-    # Spawn a separate thread for fetching the config
-    t = Thread(target=config_worker)
-    t.daemon = True
-    t.start()
+# Turn the display off when exiting
+atexit.register(unicorn.off)
 
-    while True:
-        # Draw the image on the display
-        for frame in frames:
-            # Break out of this loop if the config was updated
-            if config_did_update:
-                config_did_update = False
-                break
+# Spawn a separate thread for fetching the config
+t = Thread(target=config_worker)
+t.daemon = True
+t.start()
 
-            frame_width, frame_height = frame.size
-            for x in range(display_width):
-                for y in range(display_height):
-                    if x >= frame_width or y >= frame_height:
-                        continue
+while True:
+    # Draw the image on the display
+    for frame in frames:
+        # Break out of this loop if the config was updated
+        if config_did_update:
+            config_did_update = False
+            break
 
-                    pixel = frame.getpixel((frame_width - x - 1, y))
-                    r, g, b, a = pixel
-                    unicorn.set_pixel(x, y, r, g, b)
+        frame_width, frame_height = frame.size
+        for x in range(display_width):
+            for y in range(display_height):
+                if x >= frame_width or y >= frame_height:
+                    continue
 
-            unicorn.show()
-            time.sleep(frame.info["duration"] * 0.001 / 1.5)
+                pixel = frame.getpixel((frame_width - x - 1, y))
+                r, g, b, a = pixel
+                unicorn.set_pixel(x, y, r, g, b)
 
-except KeyboardInterrupt:
-    unicorn.off()
+        unicorn.show()
+        time.sleep(frame.info["duration"] * 0.001 / 1.5)
