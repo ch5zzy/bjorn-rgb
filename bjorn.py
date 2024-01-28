@@ -65,7 +65,7 @@ def fetch_config() -> bool:
 
         img_url = config["image_url"]
         img = Image.open(BytesIO(response.content), formats=["GIF"])
-        img.save("cache.gif", save_all=True)
+        img.save("cache.gif", save_all=True, disposal=2)
         frames = thumbnails(ImageSequence.Iterator(img))
 
         return True
