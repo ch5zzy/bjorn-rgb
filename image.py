@@ -9,7 +9,7 @@ def resize(img_path: str, size=(16, 16)) -> str:
     # Resize each image individually
     thumbnails = []
     for frame in frames:
-        frame.thumbnail(size, Image.NEAREST)
+        frame = frame.resize(size, Image.NEAREST)
         thumbnails.append(frame)
 
     # Save the image to a buffer
@@ -22,6 +22,7 @@ def resize(img_path: str, size=(16, 16)) -> str:
             duration=thumbnails[0].info["duration"],
             loop=0,
             format="GIF",
+            disposal=2,
         )
     else:
         thumbnails[0].save(
@@ -30,6 +31,7 @@ def resize(img_path: str, size=(16, 16)) -> str:
             duration=thumbnails[0].info["duration"],
             loop=0,
             format="GIF",
+            disposal=2,
         )
 
     # Return a base64 encoded string
