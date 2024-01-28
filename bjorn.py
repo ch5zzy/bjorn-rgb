@@ -114,16 +114,22 @@ while True:
         if config_did_update:
             config_did_update = False
             break
+        
+        # Show a frame until its duration has passed
+        frame_time = time.time()
+        frame_duration = frame.info["duration"] * 0.001
+        run_once = False
+        while not run_once or time.time() - frame_time < frame_duration:
+            frame_width, frame_height = frame.size
+            for x in range(display_width):
+                for y in range(display_height):
+                    if x >= frame_width or y >= frame_height:
+                        continue
 
-        frame_width, frame_height = frame.size
-        for x in range(display_width):
-            for y in range(display_height):
-                if x >= frame_width or y >= frame_height:
-                    continue
+                    pixel = frame.getpixel((frame_width - x - 1, y))
+                    r, g, b, a = pixel
+                    unicorn.set_pixel(x, y, r, g, b)
 
-                pixel = frame.getpixel((frame_width - x - 1, y))
-                r, g, b, a = pixel
-                unicorn.set_pixel(x, y, r, g, b)
-
-        unicorn.show()
-        time.sleep(frame.info["duration"] * 0.001 / 1.25)
+            unicorn.show()
+            run_once = True
+        
