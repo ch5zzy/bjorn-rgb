@@ -29,6 +29,8 @@ unicorn.rotation(default_rotation)
 unicorn.brightness(default_brightness)
 display_width, display_height = unicorn.get_shape()
 
+cache_file = "cache.webp"
+
 
 def fetch_config() -> bool:
     global img
@@ -64,8 +66,8 @@ def fetch_config() -> bool:
             return
 
         img_url = config["image_url"]
-        img = Image.open(BytesIO(response.content), formats=["GIF"])
-        img.save("cache.gif", save_all=True, disposal=2)
+        img = Image.open(BytesIO(response.content), formats=["WEBP"])
+        img.save(cache_file, save_all=True, lossless=True, quality=0)
         frames = thumbnails(ImageSequence.Iterator(img))
 
         return True
@@ -75,13 +77,16 @@ def fetch_config() -> bool:
 def thumbnails(frames):
     thumbnails = []
     for frame in frames:
-        thumbnail = frame.convert("RGBA")
+        thumbnail = frame.convert("RGB")
         thumbnails.append(thumbnail)
     return thumbnails
 
 
 # Load in the cached image
-img = Image.open("cache.gif")
+try:
+    img = Image.open(cache_file)
+except:
+    img = Image.new(mode="1", size=(display_width, display_height))
 img_url = None
 frames = thumbnails(ImageSequence.Iterator(img))
 
@@ -107,6 +112,8 @@ t = Thread(target=config_worker)
 t.daemon = True
 t.start()
 
+frame_start = None
+frame_duration = None
 while True:
     # Draw the image on the display
     for frame in frames:
@@ -114,12 +121,17 @@ while True:
         if config_did_update:
             config_did_update = False
             break
-        
+
+        # Calculate the time to skip over in the current frame
+        frame_skip = (
+            (time.time() - frame_start) - frame_duration if frame_start != None else 0
+        )
+
         # Show a frame until its duration has passed
-        frame_time = time.time()
+        frame_start = time.time() - frame_skip
         frame_duration = frame.info["duration"] * 0.001
         run_once = False
-        while not run_once or time.time() - frame_time < frame_duration:
+        while not run_once or time.time() - frame_start < frame_duration:
             frame_width, frame_height = frame.size
             for x in range(display_width):
                 for y in range(display_height):
@@ -127,9 +139,8 @@ while True:
                         continue
 
                     pixel = frame.getpixel((frame_width - x - 1, y))
-                    r, g, b, a = pixel
+                    r, g, b = pixel
                     unicorn.set_pixel(x, y, r, g, b)
 
             unicorn.show()
             run_once = True
-        
