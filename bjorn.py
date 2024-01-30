@@ -112,9 +112,10 @@ t = Thread(target=config_worker)
 t.daemon = True
 t.start()
 
-frame_start = None
-frame_duration = None
 while True:
+    frame_start = None
+    frame_duration = None
+
     # Draw the image on the display
     for frame in frames:
         # Break out of this loop if the config was updated
