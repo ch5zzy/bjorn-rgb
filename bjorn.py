@@ -42,7 +42,7 @@ def fetch_config() -> bool:
         get("https://mozilla.org")
     except:
         print("Waiting for internet connection.")
-        img = Image.open("nowifi.gif")
+        img = Image.open("nowifi.webp")
         frames = thumbnails(ImageSequence.Iterator(img))
         return
 
