@@ -120,6 +120,7 @@ while True:
         # Break out of this loop if the config was updated
         if config_did_update:
             config_did_update = False
+            frame_start = None
             break
 
         # Calculate the time to skip over in the current frame
