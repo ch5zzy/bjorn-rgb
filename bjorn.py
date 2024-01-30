@@ -39,7 +39,7 @@ def fetch_config() -> bool:
 
     # Display a Wi-Fi symbol if the device is not connected to the internet
     try:
-        get("https://mozilla.org")
+        get("https://google.com")
     except:
         print("Waiting for internet connection.")
         img = Image.open("nowifi.webp")
