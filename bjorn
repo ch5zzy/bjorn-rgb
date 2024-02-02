@@ -1,2 +1,2 @@
 #!/bin/sh
-python3 ./bjorn.py "$@"
+git pull; python3 ./bjorn.py "$@"
