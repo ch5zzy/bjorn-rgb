@@ -2,7 +2,7 @@ import time
 import argparse
 import atexit
 from PIL import Image, ImageSequence
-from requests import get
+from requests import get, head
 from io import BytesIO
 from env import (
     config_update_time,
@@ -12,6 +12,7 @@ from env import (
 )
 from threading import Thread
 from sys import argv
+from image import recolor, thumbnails
 
 # Check whether the simulator should be used
 parser = argparse.ArgumentParser()
@@ -29,27 +30,59 @@ unicorn.rotation(default_rotation)
 unicorn.brightness(default_brightness)
 display_width, display_height = unicorn.get_shape()
 
+# Load in the cached image and no internet image
 cache_file = "cache.webp"
+try:
+    cache_img = Image.open(cache_file)
+except:
+    cache_img = Image.new(mode="1", size=(display_width, display_height))
+no_wifi_img = Image.open("nowifi.webp")
+
+# Initialize image related variables
+img = None
+img_url = None
+frames = None
+
+# Mark that the device has not been connected to the internet before
+had_wifi = False
+never_wifi_img = recolor(no_wifi_img, (255, 255, 255), (124, 242, 252))
+disconnected_wifi_img = recolor(no_wifi_img, (255, 255, 255), (252, 139, 124))
+
+
+def display_cache():
+    global img
+    global img_url
+    global frames
+
+    img_url = None
+    if img != cache_img:
+        img = cache_img
+        frames = thumbnails(img)
 
 
 def fetch_config() -> bool:
     global img
     global img_url
     global frames
+    global had_wifi
 
     # Display a Wi-Fi symbol if the device is not connected to the internet
     try:
-        get("https://google.com")
+        head("https://example.com").raise_for_status()
+        had_wifi = True
     except:
         print("Waiting for internet connection.")
-        img = Image.open("nowifi.webp")
-        frames = thumbnails(ImageSequence.Iterator(img))
-        return
+        if img != never_wifi_img and img != disconnected_wifi_img:
+            # Display a blue symbol if the device has not been connected to the internet before, red otherwise
+            img = never_wifi_img if not had_wifi else disconnected_wifi_img
+            frames = thumbnails(img)
+        return False
 
     response = get(jsonblob_config_url)
     if response.status_code != 200:
         print("Unable to fetch config.")
-        return
+        display_cache()
+        return False
 
     config = response.json()
 
@@ -63,32 +96,20 @@ def fetch_config() -> bool:
         response = get(config["image_url"])
         if response.status_code != 200:
             print("Unable to fetch image.")
-            return
+            display_cache()
+            return False
 
         img_url = config["image_url"]
         img = Image.open(BytesIO(response.content), formats=["WEBP"])
         img.save(cache_file, save_all=True, lossless=True, quality=0)
-        frames = thumbnails(ImageSequence.Iterator(img))
+        frames = thumbnails(img)
 
         return True
     return False
 
 
-def thumbnails(frames):
-    thumbnails = []
-    for frame in frames:
-        thumbnail = frame.convert("RGB")
-        thumbnails.append(thumbnail)
-    return thumbnails
-
-
-# Load in the cached image
-try:
-    img = Image.open(cache_file)
-except:
-    img = Image.new(mode="1", size=(display_width, display_height))
-img_url = None
-frames = thumbnails(ImageSequence.Iterator(img))
+# Display the cached image
+display_cache()
 
 # Fetch the config on start
 fetch_config()
