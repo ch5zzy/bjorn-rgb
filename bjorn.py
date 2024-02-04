@@ -60,6 +60,15 @@ def display_cache():
         frames = thumbnails(img)
 
 
+def safe_get(url: str):
+    response = None
+    try:
+        response = get(url)
+    except:
+        pass
+    return response
+
+
 def fetch_config() -> bool:
     global img
     global img_url
@@ -78,8 +87,8 @@ def fetch_config() -> bool:
             frames = thumbnails(img)
         return False
 
-    response = get(jsonblob_config_url)
-    if response.status_code != 200:
+    response = safe_get(jsonblob_config_url)
+    if response == None or response.status_code != 200:
         print("Unable to fetch config.")
         display_cache()
         return False
@@ -93,8 +102,8 @@ def fetch_config() -> bool:
     # Update the displayed image if it changed
     if config["image_url"] != img_url:
         # Only update the image if it is valid
-        response = get(config["image_url"])
-        if response.status_code != 200:
+        response = safe_get(config["image_url"])
+        if response == None or response.status_code != 200:
             print("Unable to fetch image.")
             display_cache()
             return False
@@ -112,7 +121,7 @@ def fetch_config() -> bool:
 display_cache()
 
 # Fetch the config on start
-# fetch_config()
+fetch_config()
 
 config_did_update = False
 
