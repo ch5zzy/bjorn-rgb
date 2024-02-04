@@ -7,7 +7,7 @@ default_brightness = 0.4
 jsonblob_api_url = "https://jsonblob.com/api/jsonBlob/"
 imgbb_upload_url = "https://api.imgbb.com/1/upload"
 
-config_update_time = 10
+config_update_time = 30
 
 load_dotenv()
 
