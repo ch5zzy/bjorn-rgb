@@ -112,7 +112,7 @@ def fetch_config() -> bool:
 display_cache()
 
 # Fetch the config on start
-fetch_config()
+# fetch_config()
 
 config_did_update = False
 
@@ -129,13 +129,27 @@ def config_worker():
 atexit.register(unicorn.off)
 
 # Spawn a separate thread for fetching the config
-t = Thread(target=config_worker)
-t.daemon = True
-t.start()
+config_thread = None
+
+
+def spawn_config_thread():
+    global config_thread
+
+    config_thread = Thread(target=config_worker)
+    config_thread.daemon = True
+    config_thread.start()
+
+
+spawn_config_thread()
 
 while True:
     frame_start = None
     frame_duration = None
+
+    # Respawn the config thread if it dies
+    if not config_thread.is_alive():
+        print("Config thread is not alive, respawning.")
+        spawn_config_thread()
 
     # Draw the image on the display
     for frame in frames:
