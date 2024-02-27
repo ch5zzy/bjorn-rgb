@@ -4,8 +4,8 @@ from base64 import b64encode
 import numpy as np
 
 
-def resize(img_path: str, size=(16, 16)) -> str:
-    frames = thumbnails(Image.open(img_path))
+def resize(img_path: str, size=(16, 16), interpolation=Image.Resampling.NEAREST) -> str:
+    frames = thumbnails(Image.open(img_path), interpolation=interpolation)
 
     # Convert the image to a buffer
     buffer = frames_to_buffer(frames)
@@ -14,12 +14,12 @@ def resize(img_path: str, size=(16, 16)) -> str:
     return b64encode(buffer.getvalue())
 
 
-def thumbnails(img, size=(16, 16)):
+def thumbnails(img, size=(16, 16), interpolation=Image.Resampling.NEAREST):
     frames = ImageSequence.Iterator(img)
 
     thumbnails = []
     for frame in frames:
-        frame = frame.resize(size, Image.NEAREST)
+        frame = frame.resize(size, interpolation)
         thumbnail = frame.convert("RGB")
         thumbnails.append(thumbnail)
     return thumbnails
