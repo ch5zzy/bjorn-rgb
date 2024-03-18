@@ -124,6 +124,7 @@ display_cache()
 fetch_config()
 
 config_did_update = False
+dim_mode = False
 
 
 def config_worker():
@@ -131,6 +132,13 @@ def config_worker():
 
     while True:
         config_did_update = fetch_config()
+
+        # Dim the device if it is late
+        current_hour = time.localtime().tm_hour
+        dim_mode = current_hour >= 22 or current_hour <= 7
+        if dim_mode:
+            unicorn.brightness(0.05)
+
         time.sleep(config_update_time)
 
 
