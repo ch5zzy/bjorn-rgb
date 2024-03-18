@@ -135,7 +135,7 @@ def config_worker():
 
         # Dim the device if it is late
         current_hour = time.localtime().tm_hour
-        dim_mode = current_hour >= 22 or current_hour <= 7
+        dim_mode = current_hour >= 22 or current_hour < 7
         if dim_mode:
             unicorn.brightness(0.05)
 
