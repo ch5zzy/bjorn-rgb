@@ -42,6 +42,10 @@ if args.rotation < -max_rot or args.rotation > max_rot:
 # Check that the interpolation type is valid
 interpolation = None
 try:
+    # Prevent unauthorized code from being run
+    if ";" in args.interpolation:
+        raise
+
     exec(f"interpolation = Image.Resampling.{args.interpolation}")
 except:
     print("Invalid interpolation type.")
