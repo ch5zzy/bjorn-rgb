@@ -144,6 +144,7 @@ dim_mode = False
 
 def config_worker():
     global config_did_update
+    global dim_mode
 
     while True:
         config_did_update = fetch_config()
@@ -157,7 +158,13 @@ def config_worker():
         before_end = (
             current_hour == dim_end_hour and current_min < dim_end_min
         ) or current_hour < dim_end_hour
-        dim_mode = after_start or before_end
+        dim_mode = (
+            (
+                (dim_start_hour == dim_end_hour and dim_start_min < dim_end_min)
+                or (dim_start_hour > dim_end_hour)
+            )
+            and (after_start or before_end)
+        ) or (after_start and before_end)
         if dim_mode:
             unicorn.brightness(0.05)
 
@@ -216,6 +223,9 @@ while True:
 
                     pixel = frame.getpixel((frame_width - x - 1, y))
                     r, g, b = pixel
+                    if dim_mode:
+                        r = min(r * 1.3, 255)
+                        b = b * 0.7
                     unicorn.set_pixel(x, y, r, g, b)
 
             unicorn.show()
