@@ -48,6 +48,11 @@ had_wifi = False
 never_wifi_img = recolor(no_wifi_img, (255, 255, 255), (124, 242, 252))
 disconnected_wifi_img = recolor(no_wifi_img, (255, 255, 255), (252, 139, 124))
 
+dim_start_hour = 22
+dim_start_min = 0
+dim_end_hour = 8
+dim_end_min = 0
+
 
 def display_cache():
     global img
@@ -74,6 +79,10 @@ def fetch_config() -> bool:
     global img_url
     global frames
     global had_wifi
+    global dim_start_hour
+    global dim_start_min
+    global dim_end_hour
+    global dim_end_min
 
     # Display a Wi-Fi symbol if the device is not connected to the internet
     try:
@@ -98,6 +107,12 @@ def fetch_config() -> bool:
     # Set the rotation and brightness
     unicorn.rotation(config["rotation"])
     unicorn.brightness(config["brightness"])
+
+    # Set the dim time
+    dim_start_hour = config["dim_start"]["hour"]
+    dim_start_min = config["dim_start"]["minute"]
+    dim_end_hour = config["dim_end"]["hour"]
+    dim_end_min = config["dim_end"]["minute"]
 
     # Update the displayed image if it changed
     if config["image_url"] != img_url:
@@ -135,7 +150,14 @@ def config_worker():
 
         # Dim the device if it is late
         current_hour = time.localtime().tm_hour
-        dim_mode = current_hour >= 22 or current_hour < 7
+        current_min = time.localtime().tm_min
+        after_start = (
+            current_hour == dim_start_hour and current_min >= dim_start_min
+        ) or current_hour >= dim_start_hour
+        before_end = (
+            current_hour == dim_end_hour and current_min < dim_end_min
+        ) or current_hour < dim_end_hour
+        dim_mode = after_start or before_end
         if dim_mode:
             unicorn.brightness(0.05)
 
