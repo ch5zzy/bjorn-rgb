@@ -53,6 +53,8 @@ dim_start_min = 0
 dim_end_hour = 8
 dim_end_min = 0
 
+brightness = default_brightness
+
 
 def display_cache():
     global img
@@ -83,6 +85,7 @@ def fetch_config() -> bool:
     global dim_start_min
     global dim_end_hour
     global dim_end_min
+    global brightness
 
     # Display a Wi-Fi symbol if the device is not connected to the internet
     try:
@@ -106,7 +109,7 @@ def fetch_config() -> bool:
 
     # Set the rotation and brightness
     unicorn.rotation(config["rotation"])
-    unicorn.brightness(config["brightness"])
+    brightness = config["brightness"]
 
     # Set the dim time
     dim_start_hour = config["dim_start"]["hour"]
@@ -145,6 +148,7 @@ dim_mode = False
 def config_worker():
     global config_did_update
     global dim_mode
+    global brightness
 
     while True:
         config_did_update = fetch_config()
@@ -166,7 +170,8 @@ def config_worker():
             and (after_start or before_end)
         ) or (after_start and before_end)
         if dim_mode:
-            unicorn.brightness(0.05)
+            brightness = 0.05
+        unicorn.brightness(brightness)
 
         time.sleep(config_update_time)
 
