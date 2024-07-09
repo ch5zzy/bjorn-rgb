@@ -1,7 +1,7 @@
 import time
 import argparse
 import atexit
-from PIL import Image, ImageSequence
+from PIL import Image
 from requests import get, head
 from io import BytesIO
 from env import (
@@ -9,6 +9,11 @@ from env import (
     jsonblob_config_url,
     default_rotation,
     default_brightness,
+    default_dim_start_hour,
+    default_dim_start_min,
+    default_dim_end_hour,
+    default_dim_end_min,
+    default_dim_brightness,
 )
 from threading import Thread
 from sys import argv
@@ -48,12 +53,13 @@ had_wifi = False
 never_wifi_img = recolor(no_wifi_img, (255, 255, 255), (124, 242, 252))
 disconnected_wifi_img = recolor(no_wifi_img, (255, 255, 255), (252, 139, 124))
 
-dim_start_hour = 22
-dim_start_min = 0
-dim_end_hour = 8
-dim_end_min = 0
+dim_start_hour = default_dim_start_hour
+dim_start_min = default_dim_start_min
+dim_end_hour = default_dim_end_hour
+dim_end_min = default_dim_end_min
 
 brightness = default_brightness
+dim_brightness = default_dim_brightness
 
 
 def display_cache():
@@ -81,11 +87,12 @@ def fetch_config() -> bool:
     global img_url
     global frames
     global had_wifi
+    global brightness
     global dim_start_hour
     global dim_start_min
     global dim_end_hour
     global dim_end_min
-    global brightness
+    global dim_brightness
 
     # Display a Wi-Fi symbol if the device is not connected to the internet
     try:
@@ -111,11 +118,12 @@ def fetch_config() -> bool:
     unicorn.rotation(config["rotation"])
     brightness = config["brightness"]
 
-    # Set the dim time
+    # Set the dimming settings
     dim_start_hour = config["dim_start"]["hour"]
     dim_start_min = config["dim_start"]["minute"]
     dim_end_hour = config["dim_end"]["hour"]
     dim_end_min = config["dim_end"]["minute"]
+    dim_brightness = config["dim_brightness"]
 
     # Update the displayed image if it changed
     if config["image_url"] != img_url:
@@ -170,7 +178,7 @@ def config_worker():
             and (after_start or before_end)
         ) or (after_start and before_end)
         if dim_mode:
-            brightness = 0.05
+            brightness = dim_brightness
         unicorn.brightness(brightness)
 
         time.sleep(config_update_time)
