@@ -50,8 +50,7 @@ frames = None
 
 # Mark that the device has not been connected to the internet before
 had_wifi = False
-never_wifi_img = recolor(no_wifi_img, (255, 255, 255), (124, 242, 252))
-disconnected_wifi_img = recolor(no_wifi_img, (255, 255, 255), (252, 139, 124))
+no_wifi_img = recolor(no_wifi_img, (255, 255, 255), (124, 242, 252))
 
 dim_start_hour = default_dim_start_hour
 dim_start_min = default_dim_start_min
@@ -94,15 +93,14 @@ def fetch_config() -> bool:
     global dim_end_min
     global dim_brightness
 
-    # Display a Wi-Fi symbol if the device is not connected to the internet
+    # Display a Wi-Fi symbol if the device has not been connected to the internet
     try:
         head("https://example.com").raise_for_status()
         had_wifi = True
     except:
         print("Waiting for internet connection.")
-        if img != never_wifi_img and img != disconnected_wifi_img:
-            # Display a blue symbol if the device has not been connected to the internet before, red otherwise
-            img = never_wifi_img if not had_wifi else disconnected_wifi_img
+        if not had_wifi:
+            img = no_wifi_img
             frames = thumbnails(img)
         return False
 
