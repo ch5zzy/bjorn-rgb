@@ -1,5 +1,5 @@
 [Unit]
-Description=Bjorn Unicorn HAT service
+Description=Bjorn RGB service
 After=multi-user.target
 
 [Service]
