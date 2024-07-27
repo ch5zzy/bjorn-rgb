@@ -3,7 +3,6 @@ import time
 from image import recolor, thumbnails
 from util import check_wifi, safe_get
 from PIL import Image
-from unicorn_hat_sim import UnicornHatSim
 from env import jsonblob_config_url
 
 
@@ -19,7 +18,7 @@ default_dim_brightness = 0.05
 
 class Config:
 
-    def __init__(self, unicorn: UnicornHatSim):
+    def __init__(self, unicorn):
         # Load in the cached image and no internet image
         self.__cache_file = "cache.webp"
         display_width, display_height = unicorn.get_shape()
