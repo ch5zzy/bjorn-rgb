@@ -20,18 +20,18 @@ class Config:
 
     def __init__(self, unicorn):
         # Load in the cached image and no internet image
-        self.__cache_file = "cache.webp"
+        self._cache_file = "cache.webp"
         display_width, display_height = unicorn.get_shape()
         try:
-            self.__cache_img = Image.open(self.__cache_file)
+            self._cache_img = Image.open(self._cache_file)
         except:
-            self.__cache_img = Image.new(mode="1", size=(display_width, display_height))
-        self.__no_wifi_img = recolor(
+            self._cache_img = Image.new(mode="1", size=(display_width, display_height))
+        self._no_wifi_img = recolor(
             Image.open("nowifi.webp"), (255, 255, 255), (124, 242, 252)
         )
 
-        self.__img = None
-        self.__had_wifi = False
+        self._img = None
+        self._had_wifi = False
 
         self.img_url = None
         self.frames = None
@@ -43,23 +43,23 @@ class Config:
         self.dim_end_min = default_dim_end_min
         self.dim_brightness = default_dim_brightness
 
-        self.__use_cache_img()
+        self._use_cache_img()
 
     def fetch(self) -> bool:
         # Display a Wi-Fi symbol if the device has not been connected to the internet
         if not check_wifi():
             print("Waiting for internet connection.")
-            if not self.__had_wifi:
-                self.__img = self.__no_wifi_img
-                self.frames = thumbnails(self.__img)
+            if not self._had_wifi:
+                self._img = self._no_wifi_img
+                self.frames = thumbnails(self._img)
             return False
 
-        self.__had_wifi = True
+        self._had_wifi = True
 
         response = safe_get(jsonblob_config_url)
         if response == None or response.status_code != 200:
             print("Unable to fetch config.")
-            self.__use_cache_img()
+            self._use_cache_img()
             return False
 
         config = response.json()
@@ -81,13 +81,13 @@ class Config:
             response = safe_get(config["image_url"])
             if response == None or response.status_code != 200:
                 print("Unable to fetch image.")
-                self.__use_cache_img()
+                self._use_cache_img()
                 return False
 
             self.img_url = config["image_url"]
-            self.__img = Image.open(BytesIO(response.content), formats=["WEBP"])
-            self.__img.save(self.__cache_file, save_all=True, lossless=True, quality=0)
-            self.frames = thumbnails(self.__img)
+            self._img = Image.open(BytesIO(response.content), formats=["WEBP"])
+            self._img.save(self._cache_file, save_all=True, lossless=True, quality=0)
+            self.frames = thumbnails(self._img)
 
             return True
         return False
@@ -112,8 +112,8 @@ class Config:
             and (after_start or before_end)
         ) or (after_start and before_end)
 
-    def __use_cache_img(self):
+    def _use_cache_img(self):
         self.img_url = None
-        if self.__img != self.__cache_img:
-            self.__img = self.__cache_img
-            self.frames = thumbnails(self.__img)
+        if self._img != self._cache_img:
+            self._img = self._cache_img
+            self.frames = thumbnails(self._img)
