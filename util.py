@@ -17,3 +17,7 @@ def check_wifi():
         return False
 
     return True
+
+
+def hex_to_rgb(hex: str):
+    return tuple(int(hex[_ : _ + 2], 16) for _ in (0, 2, 4))

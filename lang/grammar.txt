@@ -1,0 +1,94 @@
+?start: instruction+
+
+# Math expressions
+
+?expr: product
+    | expr "+" product  -> add
+    | expr "-" product  -> sub
+
+?product: atom
+    | product "*" atom  -> mul
+    | product "/" atom  -> div
+    | product "%" atom  -> mod
+
+?atom: NUMBER           -> number
+     | "-" atom         -> neg
+     | NAME             -> var
+     | "(" expr ")"
+     | "int(" expr ")"  -> to_int
+     | get_time
+
+# String concatenations and conversions
+
+?string_concat: (to_string | string) ("+" (to_string | string))*
+to_string: "str(" expr ")"
+
+# Ranges
+
+?range: "(" expr "," expr ")"
+
+# If statements and conditions
+
+?if_statement: if_without_else
+            | if_with_else
+
+if_without_else: "if" condition code_block
+if_with_else: if_without_else "else" (code_block | if_statement)
+
+condition: eq_check
+         | neq_check
+         | lt_check
+         | gt_check
+         | lteq_check
+         | gteq_check
+
+eq_check: expr "==" expr
+neq_check: expr "!=" expr
+lt_check: expr "<" expr
+gt_check: expr ">" expr
+lteq_check: expr "<=" expr
+gteq_check: expr ">=" expr
+
+# Variable definitions
+
+?define_var: NAME "=" expr
+
+# For loops
+
+?for_loop: "for" NAME "in" range code_block
+
+# Built in functions
+
+log: "log(" string_concat ")"
+?set_pixel: "set_pixel(" expr "," expr "," color ")"
+display_clear: "display_clear()"
+display_update: "display_update()"
+get_time: "get_time()"
+
+# Instructions
+ 
+?instruction: code_block
+            | log
+            | define_var
+            | if_statement
+            | for_loop
+            | set_pixel
+            | display_clear
+            | display_update
+
+code_block: "{" instruction* "}"
+ 
+# Types
+
+color: hexcolor | rgb
+
+hexcolor: /\$(?:[0-9a-fA-F]{3}){1,2}/
+rgb: "rgb(" expr "," expr "," expr ")"
+
+string: /\"[^"]*\"/
+
+%import common.CNAME -> NAME
+%import common.NUMBER
+%import common.WS
+
+%ignore WS
