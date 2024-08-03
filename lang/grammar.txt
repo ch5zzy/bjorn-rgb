@@ -13,16 +13,19 @@
     | product "<<" atom -> lshift
     | product ">>" atom -> rshift
 
-?atom: NUMBER           -> number
-     | "-" atom         -> neg
-     | NAME             -> var
+?atom: NUMBER               -> number
+     | "-" atom             -> neg
+     | NAME                 -> var
      | "(" expr ")"
-     | "int(" expr ")"  -> to_int
+     | "int(" expr ")"      -> to_int
+     | "round(" expr ")"    -> round
+     | "ceil(" expr ")"     -> ceil
+     | "floor(" expr ")"    -> floor
      | get_time
 
 # String concatenations and conversions
 
-?string_concat: (to_string | string) ("+" (to_string | string))*
+string: (to_string | string_literal) ("+" (to_string | string_literal))*
 to_string: "str(" expr ")"
 
 # Ranges
@@ -53,7 +56,7 @@ gteq_check: expr ">=" expr
 
 # Variable definitions
 
-?define_var: NAME "=" expr
+define_var: NAME "=" expr
 
 # For loops
 
@@ -61,8 +64,8 @@ gteq_check: expr ">=" expr
 
 # Built in functions
 
-log: "log(" string_concat ")"
-?set_pixel: "set_pixel(" expr "," expr "," color ")"
+log: "log(" string ")"
+set_pixel: "set_pixel(" expr "," expr "," color ")"
 display_clear: "display_clear()"
 display_update: "display_update()"
 get_time: "get_time()"
@@ -82,12 +85,12 @@ code_block: "{" instruction* "}"
  
 # Types
 
-color: hexcolor | rgb
+color: hex_color | rgb_color
 
-hexcolor: /\$(?:[0-9a-fA-F]{3}){1,2}/
-rgb: "rgb(" expr "," expr "," expr ")"
+hex_color: /\$(?:[0-9a-fA-F]{3}){1,2}/
+rgb_color: "rgb(" expr "," expr "," expr ")"
 
-string: /\"[^"]*\"/
+string_literal: /\"[^"]*\"/
 
 %import common.CNAME -> NAME
 %import common.NUMBER

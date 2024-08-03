@@ -12,17 +12,21 @@ class BjornlangInterpreter:
     @v_args(inline=True)
     class MathTransformer(Transformer):
         from operator import add, sub, mul, mod, truediv as div, neg
+        from math import ceil, floor
 
         number = float
 
         def var(self, name):
             return BjornlangInterpreter._vars[name]
-        
+
         def lshift(self, value, shift):
             return int(value) << int(shift)
 
         def rshift(self, value, shift):
             return int(value) >> int(shift)
+
+        def round(self, value):
+            return round(value)
 
         def to_int(self, value):
             return int(value)
@@ -45,24 +49,22 @@ class BjornlangInterpreter:
 
     def _format_string(self, value: Tree[Token]):
         match value.data:
-            case "string":
+            case "string_literal":
                 s = value.children[0]
                 return s[1:-1]
             case "to_string":
-                return self._calc_expr(*value.children)
+                return str(self._calc_expr(*value.children))
+            case "string":
+                s = ""
+                for substr in value.children:
+                    s += self._format_string(substr)
+                return s
 
     def _log_message(self, value: Tree[Token]):
-        match value.data:
-            case "string_concat":
-                print("[LOG] ", end="")
-                for substr in value.children:
-                    print(self._format_string(substr), end="")
-                print()
-            case _:
-                print("[LOG]", self._format_string(value))
+        print("[LOG]", self._format_string(value))
 
-    def _define_var(self, name: Token | Tree[Token], expr: Token | Tree[Token]):
-        self._vars[name.value] = self._calc_expr(expr)
+    def _define_var(self, name: Token | Tree[Token], value: Tree[Token]):
+        self._vars[name.value] = self._calc_expr(value)
 
     def _for_loop(
         self, name: Tree[Token], var_range: Tree[Token], code_block: Tree[Token]
@@ -133,9 +135,9 @@ class BjornlangInterpreter:
 
     def _parse_color(self, color: Tree[Token]):
         match color.data:
-            case "hexcolor":
+            case "hex_color":
                 return hex_to_rgb(color.children[0].value[1:])
-            case "rgb":
+            case "rgb_color":
                 rgb = map(int, map(self._calc_expr, color.children))
                 return tuple(rgb)
 
