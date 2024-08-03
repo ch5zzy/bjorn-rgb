@@ -29,7 +29,7 @@ def config_worker():
         config_did_update = config.fetch()
 
         # Dim the device if it is late
-        dim_mode = config.is_dim_time()
+        dim_mode = config.dim_mode
         unicorn.brightness(config.dim_brightness if dim_mode else config.brightness)
 
         time.sleep(config_update_time)

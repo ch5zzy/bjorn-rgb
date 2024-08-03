@@ -92,7 +92,8 @@ class Config:
             return True
         return False
 
-    def is_dim_time(self):
+    @property
+    def dim_mode(self):
         current_hour = time.localtime().tm_hour
         current_min = time.localtime().tm_min
         after_start = (
@@ -105,7 +106,7 @@ class Config:
             (
                 (
                     self.dim_start_hour == self.dim_end_hour
-                    and self.dim_start_min < self.dim_end_min
+                    and self.dim_end_min < self.dim_start_min
                 )
                 or (self.dim_start_hour > self.dim_end_hour)
             )
