@@ -10,6 +10,8 @@
     | product "*" atom  -> mul
     | product "/" atom  -> div
     | product "%" atom  -> mod
+    | product "<<" atom -> lshift
+    | product ">>" atom -> rshift
 
 ?atom: NUMBER           -> number
      | "-" atom         -> neg

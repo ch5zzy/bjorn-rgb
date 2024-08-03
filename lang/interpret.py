@@ -17,6 +17,12 @@ class BjornlangInterpreter:
 
         def var(self, name):
             return BjornlangInterpreter._vars[name]
+        
+        def lshift(self, value, shift):
+            return int(value) << int(shift)
+
+        def rshift(self, value, shift):
+            return int(value) >> int(shift)
 
         def to_int(self, value):
             return int(value)
@@ -133,9 +139,7 @@ class BjornlangInterpreter:
                 rgb = map(int, map(self._calc_expr, color.children))
                 return tuple(rgb)
 
-    def _set_pixel(
-        self, x: Tree[Token], y: Tree[Token], color: Tree[Token]
-    ):
+    def _set_pixel(self, x: Tree[Token], y: Tree[Token], color: Tree[Token]):
         self._unicorn.set_pixel(
             self._calc_expr(x), self._calc_expr(y), *self._parse_color(*color.children)
         )
