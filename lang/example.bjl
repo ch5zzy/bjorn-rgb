@@ -9,7 +9,11 @@ draw_gradient = {
     g = (sin(TIME / 2 + phase_shift) + 1) * 127.5
     b = (sin(TIME / 2 + phase_shift * 2) + 1) * 127.5
 
-    set_pixel(x, y, rgb(r, g, b))
+    set_pixel(x, y, rgb(
+        r * rand(),
+        g * rand(),
+        b * rand()
+    ))
 }
 
 display_clear()
