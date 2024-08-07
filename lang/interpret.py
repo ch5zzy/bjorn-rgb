@@ -14,6 +14,7 @@ class BjornlangInterpreter:
     class MathTransformer(Transformer):
         from operator import add, sub, mul, mod, truediv as div, neg
         from math import ceil, floor, sqrt, sin, cos, pow, log, pi, e
+        from random import random
 
         number = float
 
