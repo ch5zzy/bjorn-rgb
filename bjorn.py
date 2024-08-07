@@ -6,8 +6,11 @@ from env import config_update_time
 from threading import Thread
 from sys import argv
 
+from util import import_unicorn
+
 # Check whether the simulator should be used
-unicorn = parse_cmdline(argv)
+args = parse_cmdline(argv)
+unicorn = import_unicorn(args.sim)
 
 # Initialize and fetch the config
 config = Config(unicorn)

@@ -1,6 +1,14 @@
 from requests import get, head
 
 
+def import_unicorn(sim=False):
+    if sim:
+        from unicorn_hat_sim import unicornhathd as unicorn
+    else:
+        import unicornhathd as unicorn
+    return unicorn
+
+
 def safe_get(url: str):
     response = None
     try:
