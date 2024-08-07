@@ -8,15 +8,16 @@ from util import hex_to_rgb
 class BjornlangInterpreter:
 
     _vars = {}
+    _macros = {}
 
     @v_args(inline=True)
     class MathTransformer(Transformer):
         from operator import add, sub, mul, mod, truediv as div, neg
-        from math import ceil, floor
+        from math import ceil, floor, sqrt, sin, cos, pow, log, pi, e
 
         number = float
 
-        def var(self, name):
+        def var(self, name: str):
             return BjornlangInterpreter._vars[name]
 
         def lshift(self, value, shift):
@@ -31,7 +32,13 @@ class BjornlangInterpreter:
         def to_int(self, value):
             return int(value)
 
-        def get_time(self):
+        def c_pi(self):
+            return self.pi
+
+        def c_e(self):
+            return self.e
+
+        def c_time(self):
             return time.time()
 
     def __init__(self, unicorn):
@@ -44,6 +51,11 @@ class BjornlangInterpreter:
     def interpret(self, code: str):
         self._run_instruction(self._parser.parse(code))
 
+    def repl(self):
+        while True:
+            s = input("> ")
+            self.interpret(s)
+
     def _calc_expr(self, expr: Token | Tree[Token]):
         return self._math_transformer.transform(expr)
 
@@ -53,18 +65,27 @@ class BjornlangInterpreter:
                 s = value.children[0]
                 return s[1:-1]
             case "to_string":
-                return str(self._calc_expr(*value.children))
+                val = self._calc_expr(*value.children)
+                if val == int(val):
+                    return str(int(val))
+                return str(val)
             case "string":
                 s = ""
                 for substr in value.children:
                     s += self._format_string(substr)
                 return s
 
-    def _log_message(self, value: Tree[Token]):
+    def _print_message(self, value: Tree[Token]):
         print("[LOG]", self._format_string(value))
 
-    def _define_var(self, name: Token | Tree[Token], value: Tree[Token]):
+    def _define_var(self, name: Token, value: Tree[Token]):
         self._vars[name.value] = self._calc_expr(value)
+
+    def _define_macro(self, name: Token, code_block: Tree[Token]):
+        self._macros[name.value] = code_block
+
+    def _exec_macro(self, name: Token):
+        self._exec_code_block(self._macros[name.value])
 
     def _for_loop(
         self, name: Tree[Token], var_range: Tree[Token], code_block: Tree[Token]
@@ -92,6 +113,10 @@ class BjornlangInterpreter:
             self._run_instruction(inst)
 
     def _eval_condition(self, condition: Tree[Token]):
+        print(condition)
+        if condition.data == "var":
+            return self._calc_expr(condition) != 0
+
         lh_side, rh_side = map(self._calc_expr, condition.children)
 
         match condition.data:
@@ -114,10 +139,12 @@ class BjornlangInterpreter:
         match t.data:
             case "code_block" | "start":
                 self._exec_code_block(t)
-            case "log":
-                self._log_message(*t.children)
+            case "print":
+                self._print_message(*t.children)
             case "define_var":
                 self._define_var(*t.children)
+            case "define_macro":
+                self._define_macro(*t.children)
             case "for_loop":
                 self._for_loop(*t.children)
             case "if_without_else":
@@ -132,6 +159,8 @@ class BjornlangInterpreter:
                 self._display_update()
             case "get_time":
                 self._get_time()
+            case "use_macro":
+                self._exec_macro(*t.children)
 
     def _parse_color(self, color: Tree[Token]):
         match color.data:
@@ -143,7 +172,9 @@ class BjornlangInterpreter:
 
     def _set_pixel(self, x: Tree[Token], y: Tree[Token], color: Tree[Token]):
         self._unicorn.set_pixel(
-            self._calc_expr(x), self._calc_expr(y), *self._parse_color(*color.children)
+            int(self._calc_expr(x)),
+            int(self._calc_expr(y)),
+            *self._parse_color(*color.children),
         )
 
     def _display_clear(self):

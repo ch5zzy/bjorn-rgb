@@ -1,29 +1,43 @@
+import argparse
 from sys import argv
 from cmdline import parse_cmdline
 from lang.interpret import BjornlangInterpreter
+from util import import_unicorn
 
-example_code = """
-display_width = 16
-display_height = 16
+example_file = open("lang/example.bjl")
+example_code = example_file.read()
 
-display_clear()
-for x in (0, display_width) {
-    for y in (0, display_height) {
-        r = x / 16 * 255
-        g = y / 16 * 255
-        b = (x + y) / 32 * 255
+args = parse_cmdline(argv, repl={
+    "action": "store_true",
+    "default": False
+})
 
-        if int(get_time()) % 2 != 0 {
-            set_pixel(x, y, rgb(r, g, b))
-        } else {
-            set_pixel(x, y, rgb(b, r, g))
-        }
-    }
-}
-display_update()
-"""
+if args.repl:
+    class FakeUnicorn:
 
-unicorn = parse_cmdline(argv)
+        def __init__(self):
+            self.log("initialized!")
+
+        def log(self, message):
+            print(f"[FAKE_UNICORN] {message}")
+
+        def set_pixel(self, x, y, r, g, b):
+            self.log(f"set_pixel({x}, {y}, {r}, {g}, {b})")
+
+        def show(self):
+            self.log("show()")
+
+        def clear(self):
+            self.log("clear()")
+
+        def off(self):
+            self.log("off()")
+            pass
+
+    interpreter = BjornlangInterpreter(FakeUnicorn())
+    interpreter.repl()
+
+unicorn = import_unicorn(args.sim)
 interpreter = BjornlangInterpreter(unicorn)
 while True:
     interpreter.interpret(example_code)
