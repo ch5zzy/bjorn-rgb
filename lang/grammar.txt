@@ -2,26 +2,39 @@
 
 # Math expressions
 
-?expr: product
-    | expr "+" product  -> add
-    | expr "-" product  -> sub
+?expr: shift
+     | expr "<<" shift -> lshift
+     | expr ">>" shift -> rshift
+
+?shift: product
+      | shift "+" product  -> add
+      | shift "-" product  -> sub
 
 ?product: atom
-    | product "*" atom  -> mul
-    | product "/" atom  -> div
-    | product "%" atom  -> mod
-    | product "<<" atom -> lshift
-    | product ">>" atom -> rshift
+        | product "*" atom  -> mul
+        | product "/" atom  -> div
+        | product "%" atom  -> mod
 
 ?atom: NUMBER               -> number
      | "-" atom             -> neg
+     | constant
+     | math_func
      | NAME                 -> var
      | "(" expr ")"
-     | "int(" expr ")"      -> to_int
-     | "round(" expr ")"    -> round
-     | "ceil(" expr ")"     -> ceil
-     | "floor(" expr ")"    -> floor
-     | get_time
+
+?math_func: "int(" expr ")"     -> to_int
+          | "round(" expr ")"   -> round
+          | "ceil(" expr ")"    -> ceil
+          | "floor(" expr ")"   -> floor
+          | "sqrt(" expr ")"    -> sqrt
+          | "log2(" expr ")"    -> log2
+          | "sin(" expr ")"     -> sin
+          | "cos(" expr ")"     -> cos
+          | "pow(" expr "," expr ")"    -> pow
+
+?constant: "TIME"               -> c_time
+         | "PI"                 -> c_pi
+         | "E"                  -> c_e
 
 # String concatenations and conversions
 
@@ -46,6 +59,7 @@ condition: eq_check
          | gt_check
          | lteq_check
          | gteq_check
+         | expr
 
 eq_check: expr "==" expr
 neq_check: expr "!=" expr
@@ -58,28 +72,35 @@ gteq_check: expr ">=" expr
 
 define_var: NAME "=" expr
 
+# Macro definitions and usage
+
+define_macro: NAME "=" code_block
+use_macro: NAME "()"
+
 # For loops
 
 ?for_loop: "for" NAME "in" range code_block
 
 # Built in functions
 
-log: "log(" string ")"
+print: "print(" string ")"
 set_pixel: "set_pixel(" expr "," expr "," color ")"
 display_clear: "display_clear()"
 display_update: "display_update()"
-get_time: "get_time()"
 
 # Instructions
  
 ?instruction: code_block
-            | log
+            | print
             | define_var
+            | define_macro
             | if_statement
             | for_loop
             | set_pixel
             | display_clear
             | display_update
+            # use_macro must be last so it is only matched if no others match
+            | use_macro
 
 code_block: "{" instruction* "}"
  
@@ -92,8 +113,11 @@ rgb_color: "rgb(" expr "," expr "," expr ")"
 
 string_literal: /\"[^"]*\"/
 
-%import common.CNAME -> NAME
+NAME: /[a-z0-9_]+[\w]*/
+
 %import common.NUMBER
 %import common.WS
+%import common.SH_COMMENT
 
 %ignore WS
+%ignore SH_COMMENT
