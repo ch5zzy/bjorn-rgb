@@ -137,8 +137,7 @@ while True:
         print("Config thread is not alive, respawning.")
         spawn_config_thread()
 
-    match config.graphics_mode:
-        case GraphicsMode.Image.value:
-            display_image()
-        case GraphicsMode.Script.value:
-            exec_script()
+    if config.graphics_mode == GraphicsMode.Image.value:
+        display_image()
+    elif config.graphics_mode == GraphicsMode.Script.value:
+        exec_script()

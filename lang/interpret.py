@@ -65,20 +65,19 @@ class BjornlangInterpreter:
         return self._math_transformer.transform(expr)
 
     def _format_string(self, value: Tree[Token]):
-        match value.data:
-            case "string_literal":
-                s = value.children[0]
-                return s[1:-1]
-            case "to_string":
-                val = self._calc_expr(*value.children)
-                if val == int(val):
-                    return str(int(val))
-                return str(val)
-            case "string":
-                s = ""
-                for substr in value.children:
-                    s += self._format_string(substr)
-                return s
+        if value.data == "string_literal":
+            s = value.children[0]
+            return s[1:-1]
+        elif value.data == "to_string":
+            val = self._calc_expr(*value.children)
+            if val == int(val):
+                return str(int(val))
+            return str(val)
+        elif value.data == "string":
+            s = ""
+            for substr in value.children:
+                s += self._format_string(substr)
+            return s
 
     def _print_message(self, value: Tree[Token]):
         print("[LOG]", self._format_string(value))
@@ -124,56 +123,53 @@ class BjornlangInterpreter:
 
         lh_side, rh_side = map(self._calc_expr, condition.children)
 
-        match condition.data:
-            case "eq_check":
-                return lh_side == rh_side
-            case "neq_check":
-                return lh_side != rh_side
-            case "lt_check":
-                return lh_side < rh_side
-            case "gt_check":
-                return lh_side > rh_side
-            case "lteq_check":
-                return lh_side <= rh_side
-            case "gteq_check":
-                return lh_side >= rh_side
+        if condition.data == "eq_check":
+            return lh_side == rh_side
+        elif condition.data == "neq_check":
+            return lh_side != rh_side
+        elif condition.data == "lt_check":
+            return lh_side < rh_side
+        elif condition.data == "gt_check":
+            return lh_side > rh_side
+        elif condition.data == "lteq_check":
+            return lh_side <= rh_side
+        elif condition.data == "gteq_check":
+            return lh_side >= rh_side
 
         return False
 
     def _run_instruction(self, t: ParseTree):
-        match t.data:
-            case "code_block" | "start":
-                self._exec_code_block(t)
-            case "print":
-                self._print_message(*t.children)
-            case "define_var":
-                self._define_var(*t.children)
-            case "define_macro":
-                self._define_macro(*t.children)
-            case "for_loop":
-                self._for_loop(*t.children)
-            case "if_without_else":
-                self._if_without_else(*t.children)
-            case "if_with_else":
-                self._if_with_else(*t.children)
-            case "set_pixel":
-                self._set_pixel(*t.children)
-            case "display_clear":
-                self._display_clear()
-            case "display_update":
-                self._display_update()
-            case "get_time":
-                self._get_time()
-            case "use_macro":
-                self._exec_macro(*t.children)
+        if t.data == "start" or t.data == "code_block":
+            self._exec_code_block(t)
+        elif t.data == "print":
+            self._print_message(*t.children)
+        elif t.data == "define_var":
+            self._define_var(*t.children)
+        elif t.data == "define_macro":
+            self._define_macro(*t.children)
+        elif t.data == "for_loop":
+            self._for_loop(*t.children)
+        elif t.data == "if_without_else":
+            self._if_without_else(*t.children)
+        elif t.data == "if_with_else":
+            self._if_with_else(*t.children)
+        elif t.data == "set_pixel":
+            self._set_pixel(*t.children)
+        elif t.data == "display_clear":
+            self._display_clear()
+        elif t.data == "display_update":
+            self._display_update()
+        elif t.data == "get_time":
+            self._get_time()
+        elif t.data == "use_macro":
+            self._exec_macro(*t.children)
 
     def _parse_color(self, color: Tree[Token]):
-        match color.data:
-            case "hex_color":
-                return hex_to_rgb(color.children[0].value[1:])
-            case "rgb_color":
-                rgb = map(int, map(self._calc_expr, color.children))
-                return tuple(rgb)
+        if color.data == "hex_color":
+            return hex_to_rgb(color.children[0].value[1:])
+        elif color.data == "rgb_color":
+            rgb = map(int, map(self._calc_expr, color.children))
+            return tuple(rgb)
 
     def _set_pixel(self, x: Tree[Token], y: Tree[Token], color: Tree[Token]):
         self._unicorn.set_pixel(

@@ -89,11 +89,10 @@ class Config:
         self.dim_brightness = config["dim_brightness"]
 
         self.graphics_mode = config["graphics_mode"]
-        match self.graphics_mode:
-            case GraphicsMode.Image.value:
-                return self._update_image(config)
-            case GraphicsMode.Script.value:
-                return self._update_script(config)
+        if self.graphics_mode == GraphicsMode.Image.value:
+            return self._update_image(config)
+        elif self.graphics_mode == GraphicsMode.Script.value:
+            return self._update_script(config)
 
     def set_image(self, img):
         self._img = img
