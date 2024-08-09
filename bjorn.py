@@ -1,11 +1,12 @@
 import time
 import atexit
 from cmdline import parse_cmdline
-from config import Config
+from config import Config, GraphicsMode
 from env import config_update_time
 from threading import Thread
 from sys import argv
 
+from lang.interpret import BjornlangInterpreter
 from util import import_unicorn
 
 # Check whether the simulator should be used
@@ -14,13 +15,12 @@ unicorn = import_unicorn(args.sim)
 
 # Initialize and fetch the config
 config = Config(unicorn)
-config.fetch()
+config_did_update = config.fetch()
 
 unicorn.rotation(config.rotation)
 unicorn.brightness(config.brightness)
 display_width, display_height = unicorn.get_shape()
 
-config_did_update = False
 dim_mode = False
 
 
@@ -55,16 +55,32 @@ def spawn_config_thread():
 
 spawn_config_thread()
 
-while True:
+# Create a Bjornlang interpreter for scripts
+interpreter = BjornlangInterpreter(unicorn)
+
+
+def exec_script():
+    global config_did_update
+
+    # Run the setup script if the config is recently updated
+    try:
+        if config_did_update:
+            config_did_update = False
+            interpreter.reset()
+            interpreter.interpret(config.setup_script)
+        interpreter.interpret(config.loop_script)
+    except:
+        config.set_image(config._bad_script_img)
+        display_image()
+
+
+def display_image():
+    global config_did_update
+
     frame_start = None
     frame_duration = None
     prev_frame_duration = None
     frame_skip = 0
-
-    # Respawn the config thread if it dies
-    if not config_thread.is_alive():
-        print("Config thread is not alive, respawning.")
-        spawn_config_thread()
 
     # Draw the image on the display
     for frame in config.frames:
@@ -113,3 +129,16 @@ while True:
 
         # Update the previous frame duration for frame skip checking
         prev_frame_duration = frame_duration
+
+
+while True:
+    # Respawn the config thread if it dies
+    if not config_thread.is_alive():
+        print("Config thread is not alive, respawning.")
+        spawn_config_thread()
+
+    match config.graphics_mode:
+        case GraphicsMode.Image.value:
+            display_image()
+        case GraphicsMode.Script.value:
+            exec_script()

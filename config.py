@@ -1,9 +1,15 @@
+from enum import Enum
 from io import BytesIO
 import time
 from image import recolor, thumbnails
 from util import check_wifi, safe_get
 from PIL import Image
 from env import jsonblob_config_url
+
+
+class GraphicsMode(Enum):
+    Image = "IMAGE"
+    Script = "SCRIPT"
 
 
 default_rotation = -90
@@ -14,6 +20,8 @@ default_dim_start_min = 0
 default_dim_end_hour = 8
 default_dim_end_min = 0
 default_dim_brightness = 0.05
+
+default_graphics_mode = GraphicsMode.Image
 
 
 class Config:
@@ -29,10 +37,14 @@ class Config:
         self._no_wifi_img = recolor(
             Image.open("nowifi.webp"), (255, 255, 255), (124, 242, 252)
         )
+        self._bad_script_img = recolor(
+            Image.open("badscript.webp"), (255, 255, 255), (252, 124, 124)
+        )
 
         self._img = None
         self._had_wifi = False
 
+        self.graphics_mode = default_graphics_mode
         self.img_url = None
         self.frames = None
         self.rotation = default_rotation
@@ -42,6 +54,8 @@ class Config:
         self.dim_end_hour = default_dim_end_hour
         self.dim_end_min = default_dim_end_min
         self.dim_brightness = default_dim_brightness
+        self.setup_script = None
+        self.loop_script = None
 
         self._use_cache_img()
 
@@ -50,8 +64,7 @@ class Config:
         if not check_wifi():
             print("Waiting for internet connection.")
             if not self._had_wifi:
-                self._img = self._no_wifi_img
-                self.frames = thumbnails(self._img)
+                self.set_image(self._no_wifi_img)
             return False
 
         self._had_wifi = True
@@ -75,6 +88,18 @@ class Config:
         self.dim_end_min = config["dim_end"]["minute"]
         self.dim_brightness = config["dim_brightness"]
 
+        self.graphics_mode = config["graphics_mode"]
+        match self.graphics_mode:
+            case GraphicsMode.Image.value:
+                return self._update_image(config)
+            case GraphicsMode.Script.value:
+                return self._update_script(config)
+
+    def set_image(self, img):
+        self._img = img
+        self.frames = thumbnails(self._img)
+
+    def _update_image(self, config):
         # Update the displayed image if it changed
         if config["image_url"] != self.img_url:
             # Only update the image if it is valid
@@ -91,6 +116,18 @@ class Config:
 
             return True
         return False
+
+    def _update_script(self, config):
+        did_update = (
+            self.setup_script != config["script"]["setup"]
+            or self.loop_script != config["script"]["loop"]
+        )
+
+        # Update the script used on the device
+        self.setup_script = config["script"]["setup"]
+        self.loop_script = config["script"]["loop"]
+
+        return did_update
 
     @property
     def dim_mode(self):

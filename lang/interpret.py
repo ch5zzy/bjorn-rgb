@@ -57,6 +57,10 @@ class BjornlangInterpreter:
             s = input("> ")
             self.interpret(s)
 
+    def reset(self):
+        self._vars.clear()
+        self._macros.clear()
+
     def _calc_expr(self, expr: Token | Tree[Token]):
         return self._math_transformer.transform(expr)
 
