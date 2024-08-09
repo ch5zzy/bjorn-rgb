@@ -61,7 +61,7 @@ class BjornlangInterpreter:
         self._vars.clear()
         self._macros.clear()
 
-    def _calc_expr(self, expr: Token | Tree[Token]):
+    def _calc_expr(self, expr):
         return self._math_transformer.transform(expr)
 
     def _format_string(self, value: Tree[Token]):
