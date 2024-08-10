@@ -69,7 +69,9 @@ def exec_script():
             interpreter.reset()
             interpreter.interpret(config.setup_script)
         interpreter.interpret(config.loop_script)
-    except:
+    except BaseException as e:
+        print("Error when executing script:")
+        print(e)
         config.set_image(config._bad_script_img)
         display_image()
 
