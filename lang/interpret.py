@@ -127,7 +127,6 @@ class BjornlangInterpreter:
             self._run_instruction(inst)
 
     def _eval_condition(self, condition: Tree[Token]):
-        print(condition)
         if condition.data == "var":
             return self._calc_expr(condition) != 0
 
