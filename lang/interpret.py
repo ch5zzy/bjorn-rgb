@@ -9,6 +9,7 @@ class BjornlangInterpreter:
 
     _vars = {}
     _macros = {}
+    _cache = {}
 
     @v_args(inline=True)
     class MathTransformer(Transformer):
@@ -50,7 +51,15 @@ class BjornlangInterpreter:
         self._math_transformer = self.MathTransformer()
 
     def interpret(self, code: str):
-        self._run_instruction(self._parser.parse(code))
+        # Check if the code is in the interpreter cache
+        cache_key = hash(code)
+        if cache_key in self._cache:
+            self._run_instruction(self._cache[cache_key])
+            return
+
+        parse_tree = self._parser.parse(code)
+        self._run_instruction(parse_tree)
+        self._cache[cache_key] = parse_tree
 
     def repl(self):
         while True:
@@ -60,6 +69,7 @@ class BjornlangInterpreter:
     def reset(self):
         self._vars.clear()
         self._macros.clear()
+        self._cache.clear()
 
     def _calc_expr(self, expr):
         return self._math_transformer.transform(expr)
