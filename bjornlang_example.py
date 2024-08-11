@@ -4,15 +4,14 @@ from cmdline import parse_cmdline
 from lang.interpret import BjornlangInterpreter
 from util import import_unicorn
 
-example_file = open("lang/example.bjl")
-example_code = example_file.read()
-
-args = parse_cmdline(argv, repl={
-    "action": "store_true",
-    "default": False
-})
+args = parse_cmdline(
+    argv,
+    repl={"action": "store_true", "default": False},
+    file={"action": "store", "default": None},
+)
 
 if args.repl:
+
     class FakeUnicorn:
 
         def __init__(self):
@@ -37,7 +36,16 @@ if args.repl:
     interpreter = BjornlangInterpreter(FakeUnicorn())
     interpreter.repl()
 
+
+if args.file != None:
+    file = open(args.file)
+else:
+    file = open("lang/example.bjl")
+
+code = file.read()
+file.close()
+
 unicorn = import_unicorn(args.sim)
 interpreter = BjornlangInterpreter(unicorn)
 while True:
-    interpreter.interpret(example_code)
+    interpreter.interpret(code)
