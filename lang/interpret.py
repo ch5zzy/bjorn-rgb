@@ -1,6 +1,9 @@
 from os import path
 import time
 from lark import Lark, ParseTree, Token, Transformer, Tree, v_args
+from operator import add, sub, mul, mod, truediv as div
+from math import ceil, floor, sqrt, sin, cos, pow, log, pi, e
+from random import random
 
 from util import hex_to_rgb
 
@@ -11,44 +14,11 @@ class BjornlangInterpreter:
     _macros = {}
     _cache = {}
 
-    @v_args(inline=True)
-    class MathTransformer(Transformer):
-        from operator import add, sub, mul, mod, truediv as div, neg
-        from math import ceil, floor, sqrt, sin, cos, pow, log, pi, e
-        from random import random
-
-        number = float
-
-        def var(self, name: str):
-            return BjornlangInterpreter._vars[name]
-
-        def lshift(self, value, shift):
-            return int(value) << int(shift)
-
-        def rshift(self, value, shift):
-            return int(value) >> int(shift)
-
-        def round(self, value):
-            return round(value)
-
-        def to_int(self, value):
-            return int(value)
-
-        def c_pi(self):
-            return self.pi
-
-        def c_e(self):
-            return self.e
-
-        def c_time(self):
-            return time.time()
-
     def __init__(self, unicorn):
         self._unicorn = unicorn
 
         grammar_file = open(path.join(path.dirname(__file__), "grammar.txt"))
         self._parser = Lark(grammar_file.read())
-        self._math_transformer = self.MathTransformer()
 
     def interpret(self, code: str):
         # Check if the code is in the interpreter cache
@@ -72,7 +42,55 @@ class BjornlangInterpreter:
         self._cache.clear()
 
     def _calc_expr(self, expr):
-        return self._math_transformer.transform(expr)
+        if expr.data == "number":
+            return float(expr.children[0].value)
+        elif expr.data == "var":
+            return self._vars[expr.children[0].value]
+        elif expr.data == "neg":
+            return -self._calc_expr(expr.children[0])
+        elif expr.data == "add":
+            return add(*map(self._calc_expr, expr.children))
+        elif expr.data == "sub":
+            return sub(*map(self._calc_expr, expr.children))
+        elif expr.data == "mul":
+            return mul(*map(self._calc_expr, expr.children))
+        elif expr.data == "div":
+            return div(*map(self._calc_expr, expr.children))
+        elif expr.data == "mod":
+            return mod(*map(self._calc_expr, expr.children))
+
+        return self._calc_math_func_or_constant(expr)
+
+    def _calc_math_func_or_constant(self, expr):
+        # Math functions
+        if expr.data == "to_int":
+            return int(self._calc_expr(*expr.children))
+        elif expr.data == "round":
+            return round(self._calc_expr(*expr.children))
+        elif expr.data == "ceil":
+            return ceil(self._calc_expr(*expr.children))
+        elif expr.data == "floor":
+            return floor(self._calc_expr(*expr.children))
+        elif expr.data == "sqrt":
+            return sqrt(self._calc_expr(*expr.children))
+        elif expr.data == "log2":
+            return log(self._calc_expr(*expr.children), 2)
+        elif expr.data == "sin":
+            return sin(self._calc_expr(*expr.children))
+        elif expr.data == "cos":
+            return cos(self._calc_expr(*expr.children))
+        elif expr.data == "pow":
+            return pow(*map(self._calc_expr, expr.children))
+        elif expr.data == "random":
+            return random()
+
+        # Constants
+        if expr.data == "c_time":
+            return time.time()
+        elif expr.data == "c_pi":
+            return pi
+        elif expr.data == "c_e":
+            return e
 
     def _format_string(self, value: Tree[Token]):
         if value.data == "string_literal":
