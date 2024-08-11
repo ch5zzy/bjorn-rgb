@@ -1,2 +1,2 @@
 #!/bin/sh
-git pull; python3 ./bjorn.py "$@"
+git pull; python3 setup.py build_ext --inplace; python3 ./bjorn.py "$@"
