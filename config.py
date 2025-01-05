@@ -1,10 +1,10 @@
 from enum import Enum
 from io import BytesIO
-import time
 from image import recolor, thumbnails
 from util import check_wifi, safe_get
 from PIL import Image
 from env import jsonblob_config_url
+from clock import Clock
 
 
 class GraphicsMode(Enum):
@@ -20,13 +20,14 @@ default_dim_start_min = 0
 default_dim_end_hour = 8
 default_dim_end_min = 0
 default_dim_brightness = 0.05
+default_detect_timezone_from_ip = True
 
 default_graphics_mode = GraphicsMode.Image
 
 
 class Config:
 
-    def __init__(self, unicorn):
+    def __init__(self, unicorn, clock: Clock):
         # Load in the cached image and no internet image
         self._cache_file = "cache.webp"
         display_width, display_height = unicorn.get_shape()
@@ -44,6 +45,8 @@ class Config:
         self._img = None
         self._had_wifi = False
 
+        self._clock = clock
+
         self.graphics_mode = default_graphics_mode
         self.img_url = None
         self.frames = None
@@ -54,6 +57,7 @@ class Config:
         self.dim_end_hour = default_dim_end_hour
         self.dim_end_min = default_dim_end_min
         self.dim_brightness = default_dim_brightness
+        self.detect_timezone_from_ip = default_detect_timezone_from_ip
         self.setup_script = None
         self.loop_script = None
 
@@ -87,6 +91,7 @@ class Config:
         self.dim_end_hour = config["dim_end"]["hour"]
         self.dim_end_min = config["dim_end"]["minute"]
         self.dim_brightness = config["dim_brightness"]
+        self.detect_timezone_from_ip = config["detect_timezone_from_ip"]
 
         self.graphics_mode = config["graphics_mode"]
         if self.graphics_mode == GraphicsMode.Image.value:
@@ -130,8 +135,8 @@ class Config:
 
     @property
     def dim_mode(self):
-        current_hour = time.localtime().tm_hour
-        current_min = time.localtime().tm_min
+        current_hour = self._clock.localtime().tm_hour
+        current_min = self._clock.localtime().tm_min
         after_start = (
             current_hour == self.dim_start_hour and current_min >= self.dim_start_min
         ) or current_hour >= self.dim_start_hour

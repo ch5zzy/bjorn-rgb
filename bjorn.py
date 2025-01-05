@@ -5,6 +5,7 @@ from config import Config, GraphicsMode
 from env import config_update_time
 from threading import Thread
 from sys import argv
+from clock import Clock
 
 from lang.interpret import BjornlangInterpreter
 from util import import_unicorn
@@ -13,15 +14,21 @@ from util import import_unicorn
 args = parse_cmdline(argv)
 unicorn = import_unicorn(args.sim)
 
+clock = Clock()
+
 # Initialize and fetch the config
-config = Config(unicorn)
+config = Config(unicorn, clock)
 config_did_update = config.fetch()
 
 unicorn.rotation(config.rotation)
 unicorn.brightness(config.brightness)
 display_width, display_height = unicorn.get_shape()
 
-dim_mode = False
+# Set the timezone from IP if enabled
+if config.detect_timezone_from_ip:
+    clock.update_for_location()
+
+dim_mode = config.dim_mode
 
 
 def config_worker():
