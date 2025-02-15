@@ -7,11 +7,6 @@ from env import jsonblob_config_url
 from clock import Clock
 
 
-class GraphicsMode(Enum):
-    Image = "IMAGE"
-    Script = "SCRIPT"
-
-
 default_rotation = -90
 default_brightness = 0.4
 
@@ -21,8 +16,6 @@ default_dim_end_hour = 8
 default_dim_end_min = 0
 default_dim_brightness = 0.05
 default_detect_timezone_from_ip = True
-
-default_graphics_mode = GraphicsMode.Image
 
 
 class Config:
@@ -38,16 +31,12 @@ class Config:
         self._no_wifi_img = recolor(
             Image.open("nowifi.webp"), (255, 255, 255), (124, 242, 252)
         )
-        self._bad_script_img = recolor(
-            Image.open("badscript.webp"), (255, 255, 255), (252, 124, 124)
-        )
 
         self._img = None
         self._had_wifi = False
 
         self._clock = clock
 
-        self.graphics_mode = default_graphics_mode
         self.img_url = None
         self.frames = None
         self.rotation = default_rotation
@@ -58,8 +47,6 @@ class Config:
         self.dim_end_min = default_dim_end_min
         self.dim_brightness = default_dim_brightness
         self.detect_timezone_from_ip = default_detect_timezone_from_ip
-        self.setup_script = None
-        self.loop_script = None
 
         self._use_cache_img()
 
@@ -93,11 +80,7 @@ class Config:
         self.dim_brightness = config["dim_brightness"]
         self.detect_timezone_from_ip = config["detect_timezone_from_ip"]
 
-        self.graphics_mode = config["graphics_mode"]
-        if self.graphics_mode == GraphicsMode.Image.value:
-            return self._update_image(config)
-        elif self.graphics_mode == GraphicsMode.Script.value:
-            return self._update_script(config)
+        return self._update_image(config)
 
     def set_image(self, img):
         self._img = img
@@ -120,18 +103,6 @@ class Config:
 
             return True
         return False
-
-    def _update_script(self, config):
-        did_update = (
-            self.setup_script != config["script"]["setup"]
-            or self.loop_script != config["script"]["loop"]
-        )
-
-        # Update the script used on the device
-        self.setup_script = config["script"]["setup"]
-        self.loop_script = config["script"]["loop"]
-
-        return did_update
 
     @property
     def dim_mode(self):

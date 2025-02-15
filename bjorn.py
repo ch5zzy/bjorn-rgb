@@ -1,13 +1,12 @@
 import time
 import atexit
 from cmdline import parse_cmdline
-from config import Config, GraphicsMode
+from config import Config
 from env import config_update_time
 from threading import Thread
 from sys import argv
 from clock import Clock
 
-from lang.interpret import BjornlangInterpreter
 from util import import_unicorn
 
 # Check whether the simulator should be used
@@ -61,26 +60,6 @@ def spawn_config_thread():
 
 
 spawn_config_thread()
-
-# Create a Bjornlang interpreter for scripts
-interpreter = BjornlangInterpreter(unicorn)
-
-
-def exec_script():
-    global config_did_update
-
-    # Run the setup script if the config is recently updated
-    try:
-        if config_did_update:
-            config_did_update = False
-            interpreter.reset()
-            interpreter.interpret(config.setup_script)
-        interpreter.interpret(config.loop_script)
-    except BaseException as e:
-        print("Error when executing script:")
-        print(e)
-        config.set_image(config._bad_script_img)
-        display_image()
 
 
 def display_image():
@@ -146,7 +125,4 @@ while True:
         print("Config thread is not alive, respawning.")
         spawn_config_thread()
 
-    if config.graphics_mode == GraphicsMode.Image.value:
-        display_image()
-    elif config.graphics_mode == GraphicsMode.Script.value:
-        exec_script()
+    display_image()
