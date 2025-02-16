@@ -1,6 +1,6 @@
 import time
 from util import safe_get
-from timezonefinder import TimezoneFinder
+from tzfpy import get_tz
 import geocoder
 import ntplib
 from os import environ
@@ -32,7 +32,7 @@ class Clock:
         ip = response.text
         lat, lng = geocoder.ip(ip).latlng
 
-        return TimezoneFinder().timezone_at(lat=lat, lng=lng)
+        return get_tz(lat=lat, lng=lng)
 
     def _get_ntp_time(self):
         try:
