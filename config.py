@@ -3,8 +3,10 @@ from io import BytesIO
 from image import recolor, thumbnails
 from util import check_wifi, safe_get
 from PIL import Image
-from env import jsonblob_config_url
+from env import jsonblob_config_url, local_config_path
 from clock import Clock
+import json
+import base64
 
 
 default_rotation = -90
@@ -60,13 +62,15 @@ class Config:
 
         self._had_wifi = True
 
-        response = safe_get(jsonblob_config_url)
-        if response == None or response.status_code != 200:
-            print("Unable to fetch config.")
-            self._use_cache_img()
-            return False
+        config: Config = None
+        if local_config_path:
+            config = self._fetch_local()
+        else:
+            config = self._fetch_remote()
 
-        config = response.json()
+        if config == None:
+            print("Config could not be found or was invalid.")
+            return False
 
         # Set the rotation and brightness
         self.rotation = config["rotation"]
@@ -86,18 +90,43 @@ class Config:
         self._img = img
         self.frames = thumbnails(self._img)
 
+    def _fetch_local(self):
+        try:
+            return json.load(open(local_config_path, "r"))
+        except:
+            return None
+
+    def _fetch_remote(self):
+        response = safe_get(jsonblob_config_url)
+        if response == None or response.status_code != 200:
+            print("Unable to fetch config.")
+            self._use_cache_img()
+            return None
+
+        return response.json()
+
     def _update_image(self, config):
         # Update the displayed image if it changed
+        data = None
         if config["image_url"] != self.img_url:
-            # Only update the image if it is valid
-            response = safe_get(config["image_url"])
-            if response == None or response.status_code != 200:
-                print("Unable to fetch image.")
-                self._use_cache_img()
-                return False
+            if config["image_url"].startswith("data:"):
+                try:
+                    break_idx = config["image_url"].index(",") + 1
+                    data = base64.b64decode(config["image_url"][break_idx:])
+                except:
+                    print("Image data URI was invalid.")
+                    self._use_cache_img()
+            else:
+                # Only update the image if it is valid
+                response = safe_get(config["image_url"])
+                if response == None or response.status_code != 200:
+                    print("Unable to fetch image.")
+                    self._use_cache_img()
+                    return False
+                data = response.content
 
             self.img_url = config["image_url"]
-            self._img = Image.open(BytesIO(response.content), formats=["WEBP"])
+            self._img = Image.open(BytesIO(data), formats=["WEBP"])
             self._img.save(self._cache_file, save_all=True, lossless=True, quality=0)
             self.frames = thumbnails(self._img)
 
